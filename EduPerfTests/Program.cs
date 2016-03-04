@@ -12,17 +12,17 @@ namespace EduPerfTests
     {
         static void Main(string[] args)
         {
-
-            Octane(1);
-            SunSpider(1);
-            SiteLoadTime("http://www.bing.com/mapspreview", 1);
-            SiteLoadTime("https://www.brainpop.com/", 1);
-            SiteLoadTime("https://www.edmodo.com/", 1);
-            SiteLoadTime("https://www.google.com/maps", 1);
-            SiteLoadTime("https://www.biodigital.com/", 1);
-            SiteLoadTime("http://www.jpl.nasa.gov/", 1);
-            SiteLoadTime("https://www.khanacademy.org/", 1);
-            SiteLoadTime("https://scratch.mit.edu/", 1);
+            JetStream(1);
+            //Octane(1);
+            //SunSpider(1);
+            //SiteLoadTime("http://www.bing.com/mapspreview", 1);
+            //SiteLoadTime("https://www.brainpop.com/", 1);
+            //SiteLoadTime("https://www.edmodo.com/", 1);
+            //SiteLoadTime("https://www.google.com/maps", 1);
+            //SiteLoadTime("https://www.biodigital.com/", 1);
+            //SiteLoadTime("http://www.jpl.nasa.gov/", 1);
+            //SiteLoadTime("https://www.khanacademy.org/", 1);
+            //SiteLoadTime("https://scratch.mit.edu/", 1);
         }
 
         static void SiteLoadTime(string site, int pass)
@@ -174,7 +174,50 @@ namespace EduPerfTests
                 var result = driver.FindElementById("console").Text.Substring(161, 5);
                 using (StreamWriter file = new StreamWriter(path, true))
                 {
-                    file.WriteLine(string.Format("SunSpider,Firefox,{0},{1},", result, i + 1));
+                    file.WriteLine(string.Format("SunSpider,Internet Explorer,{0},{1},", result, i + 1));
+                }
+                driver.Quit();
+            }
+        }
+
+        static void JetStream(int pass)
+        {
+            string path = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
+
+            //// Firefox Runs
+            //for (int i = 0; i < pass; i++)
+            //{
+            //    var driver = new FirefoxDriver();
+            //    driver.Manage().Window.Maximize();
+            //    driver.Url = "http://browserbench.org/JetStream/";
+            //    driver.FindElementByCssSelector("#status>a").Click();
+            //    while (string.IsNullOrWhiteSpace(driver.FindElementById("result-summary").Text))
+            //    {
+            //        Thread.Sleep(1000);
+            //    }
+            //    var result = driver.FindElementById("result-summary").Text.Substring(7, 6);
+            //    using (StreamWriter file = new StreamWriter(path, true))
+            //    {
+            //        file.WriteLine(string.Format("SunSpider,Firefox,{0},{1},", result, i + 1));
+            //    }
+            //    driver.Quit();
+            //}
+
+            // Internet Explorer Runs
+            for (int i = 0; i < pass; i++)
+            {
+                var driver = new InternetExplorerDriver();
+                driver.Manage().Window.Maximize();
+                driver.Url = "http://browserbench.org/JetStream/";
+                driver.ExecuteScript("document.getElementById('status').children[0].click();");
+                while (driver.ExecuteScript("return document.getElementById('status').children[0].textContent").ToString() != "Test Again")
+                {
+                    Thread.Sleep(1000);
+                }
+                var result = driver.FindElementById("result-summary").Text.Substring(7, 6);
+                using (StreamWriter file = new StreamWriter(path, true))
+                {
+                    file.WriteLine(string.Format("SunSpider,Internet Explorer,{0},{1},", result, i + 1));
                 }
                 driver.Quit();
             }
