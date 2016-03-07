@@ -12,7 +12,8 @@ namespace EduPerfTests
     {
         static void Main(string[] args)
         {
-            JetStream(1);
+            WebXPRT(1);
+            //JetStream(1);
             //Octane(10);
             //SunSpider(10);
             //SiteLoadTime("http://www.bing.com/mapspreview", 10);
@@ -218,6 +219,49 @@ namespace EduPerfTests
                 using (StreamWriter file = new StreamWriter(path, true))
                 {
                     file.WriteLine(string.Format("SunSpider,Internet Explorer,{0},{1},", result, i + 1));
+                }
+                driver.Quit();
+            }
+        }
+
+        static void WebXPRT(int pass)
+        {
+            string path = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
+
+            // Firefox Runs
+            //for (int i = 0; i < pass; i++)
+            //{
+            //    var driver = new FirefoxDriver();
+            //    driver.Manage().Window.Maximize();
+            //    driver.Url = "http://www.principledtechnologies.com/benchmarkxprt/webxprt/2015/v19982/";
+            //    driver.FindElementById("imgRunAll").Click();
+            //    while (driver.Url != "http://www.principledtechnologies.com/benchmarkxprt/webxprt/2015/v19982/results.php?c=0")
+            //    {
+            //        Thread.Sleep(1000);
+            //    }
+            //    var result = driver.FindElementByCssSelector(".resultsOval>.scoreText").Text;
+            //    using (StreamWriter file = new StreamWriter(path, true))
+            //    {
+            //        file.WriteLine(string.Format("WebXPRT,Firefox,{0},{1},", result, i + 1));
+            //    }
+            //    driver.Quit();
+            //}
+
+            // Internet Explorer Runs
+            for (int i = 0; i < pass; i++)
+            {
+                var driver = new InternetExplorerDriver();
+                driver.Manage().Window.Maximize();
+                driver.Url = "http://www.principledtechnologies.com/benchmarkxprt/webxprt/2015/v19982/";
+                driver.FindElementById("imgRunAll").Click();
+                while (driver.Url != "http://www.principledtechnologies.com/benchmarkxprt/webxprt/2015/v19982/results.php?c=0")
+                {
+                    Thread.Sleep(1000);
+                }
+                var result = driver.FindElementByCssSelector(".resultsOval>.scoreText").Text;
+                using (StreamWriter file = new StreamWriter(path, true))
+                {
+                    file.WriteLine(string.Format("WebXPRT,Internet Explorer,{0},{1},", result, i + 1));
                 }
                 driver.Quit();
             }
