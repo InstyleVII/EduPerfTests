@@ -202,7 +202,7 @@ namespace EduPerfTests
                 driver.Manage().Window.Maximize();
                 driver.Url = "http://oortonline.gl/#run";
                 Thread.Sleep(600000);
-                driver.GetScreenshot().SaveAsFile(Path.Combine(directory.FullName, string.Format(@"Firefox{0}.png", i)), ImageFormat.Png);
+                driver.GetScreenshot().SaveAsFile(Path.Combine(directory.FullName, string.Format(@"{0}{1}.png", browser, i+1)), ImageFormat.Png);
                 driver.Quit();
             }
         }
