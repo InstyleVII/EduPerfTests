@@ -32,15 +32,6 @@ namespace EduPerfTests
                 file.WriteLine("Benchmark,Browser,Result,Iteration");
             }
 
-            foreach (var browser in browsers)
-            {
-                if (tests.Contains("Octane")) Octane(browser);
-                if (tests.Contains("SunSpider")) SunSpider(browser);
-                if (tests.Contains("JetStream")) JetStream(browser);
-                if (tests.Contains("WebXPRT")) WebXPRT(browser);
-                if (tests.Contains("OORTOnline")) OORTOnline(browser);
-            }
-
             string loadPath = string.Format(@"{0}\pageloadresults.csv", Directory.GetCurrentDirectory());
             using (StreamWriter file = new StreamWriter(loadPath))
             {
@@ -49,14 +40,21 @@ namespace EduPerfTests
 
             foreach (var browser in browsers)
             {
-                SiteLoadTime("http://www.bing.com/mapspreview", browser);
-                SiteLoadTime("https://www.brainpop.com/", browser);
-                SiteLoadTime("https://www.edmodo.com/", browser);
-                SiteLoadTime("https://www.google.com/maps", browser);
-                SiteLoadTime("https://www.biodigital.com/", browser);
-                SiteLoadTime("http://www.jpl.nasa.gov/", browser);
-                SiteLoadTime("https://www.khanacademy.org/", browser);
-                SiteLoadTime("https://scratch.mit.edu/", browser);
+                var driver = LaunchDriver(browser);
+                if (tests.Contains("Octane")) Octane(browser, driver);
+                if (tests.Contains("SunSpider")) SunSpider(browser, driver);
+                if (tests.Contains("JetStream")) JetStream(browser, driver);
+                if (tests.Contains("WebXPRT")) WebXPRT(browser, driver);
+                if (tests.Contains("OORTOnline")) OORTOnline(browser, driver);
+                SiteLoadTime("http://www.bing.com/mapspreview", browser, driver);
+                SiteLoadTime("https://www.brainpop.com/", browser, driver);
+                SiteLoadTime("https://www.edmodo.com/", browser, driver);
+                SiteLoadTime("https://www.google.com/maps", browser, driver);
+                SiteLoadTime("https://www.biodigital.com/", browser, driver);
+                SiteLoadTime("http://www.jpl.nasa.gov/", browser, driver);
+                SiteLoadTime("https://www.khanacademy.org/", browser, driver);
+                SiteLoadTime("https://scratch.mit.edu/", browser, driver);
+                driver.Quit();
             }
         }
 
@@ -105,23 +103,25 @@ namespace EduPerfTests
 
         static RemoteWebDriver LaunchDriver(string browser)
         {
-            RemoteWebDriver driver = null;
-
             try
             {
                 switch (browser)
                 {
                     case "Firefox":
                         driver = new FirefoxDriver();
+                        driver.Manage().Window.Maximize();
                         break;
                     case "Chrome":
                         driver = new ChromeDriver();
+                        driver.Manage().Window.Maximize();
                         break;
                     case "Internet Explorer":
                         driver = new InternetExplorerDriver();
+                        driver.Manage().Window.Maximize();
                         break;
                     default:
                         driver = new EdgeDriver();
+                        driver.Manage().Window.Maximize();
                         break;
                 }
             }
@@ -133,128 +133,119 @@ namespace EduPerfTests
             return driver;
         }
 
-        static void SiteLoadTime(string site, string browser)
+        static void SiteLoadTime(string site, string browser, RemoteWebDriver driver)
         {
             string path = string.Format(@"{0}\pageloadresults.csv", Directory.GetCurrentDirectory());
             
             for (int i = 0; i < iterations; i++)
             {
-                var driver = LaunchDriver(browser);
                 driver.Manage().Window.Maximize();
-                driver.Manage().Timeouts().SetPageLoadTimeout(new TimeSpan(0, 0, 0, 0, 5000));
                 driver.Url = site;
+                if (browser == "Edge")
+                {
+                    Thread.Sleep(2000);
+                }
                 var result = Convert.ToInt32(driver.ExecuteScript("return performance.timing.loadEventEnd - performance.timing.navigationStart;"));
                 using (StreamWriter file = new StreamWriter(path, true))
                 {
                     file.WriteLine(string.Format("{0},{1},{2},{3},", site, browser, result, i + 1));
                 }
-                driver.Quit();
             }
         }
 
-        static void Octane(string browser)
+        static void Octane(string browser, RemoteWebDriver driver)
         {
             string path = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
-            
+
             for (int i = 0; i < iterations; i++)
             {
-                driver = LaunchDriver(browser);
-                driver.Manage().Window.Maximize();
                 driver.Url = "http://chromium.github.io/octane/";
                 driver.ExecuteScript("document.getElementById('run-octane').click();");
                 while (!driver.FindElementById("main-banner").Text.Contains("Octane Score:"))
                 {
-                    Thread.Sleep(1000);
+                    Thread.Sleep(10000);
                 }
                 var result = driver.FindElementById("main-banner").Text.Substring(14);
                 using (StreamWriter file = new StreamWriter(path, true))
                 {
                     file.WriteLine(string.Format("Octane,{0},{1},{2},", browser, result, i + 1));
                 }
-                driver.Quit();
             }
         }
 
-        static void SunSpider(string browser)
+        static void SunSpider(string browser, RemoteWebDriver driver)
         {
             string path = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
             
             for (int i = 0; i < iterations; i++)
             {
-                var driver = LaunchDriver(browser);
-                driver.Manage().Window.Maximize();
                 driver.Url = "https://webkit.org/perf/sunspider-1.0.2/sunspider-1.0.2/driver.html";
                 while (driver.Url.Equals("https://webkit.org/perf/sunspider-1.0.2/sunspider-1.0.2/driver.html"))
                 {
-                    Thread.Sleep(1000);
+                    Thread.Sleep(10000);
                 }
                 var result = driver.FindElementById("console").Text.Substring(161, 5);
+                if (browser == "Edge")
+                {
+                    result = driver.FindElementById("console").Text.Substring(165, 5);
+                }
                 using (StreamWriter file = new StreamWriter(path, true))
                 {
                     file.WriteLine(string.Format("SunSpider,{0},{1},{2},", browser, result, i + 1));
                 }
-                driver.Quit();
             }
         }
 
-        static void JetStream(string browser)
+        static void JetStream(string browser, RemoteWebDriver driver)
         {
             string path = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
             
             for (int i = 0; i < iterations; i++)
             {
-                var driver = LaunchDriver(browser);
-                driver.Manage().Window.Maximize();
                 driver.Url = "http://browserbench.org/JetStream/";
                 driver.ExecuteScript("document.getElementById('status').children[0].click();");
                 while (driver.FindElementById("status").Text != "Test Again")
                 {
-                    Thread.Sleep(1000);
+                    Thread.Sleep(10000);
                 }
                 var result = driver.FindElementById("results-cell-geomean").Text.Substring(0, 6);
                 using (StreamWriter file = new StreamWriter(path, true))
                 {
                     file.WriteLine(string.Format("JetStream,{0},{1},{2},", browser, result, i + 1));
                 }
-                driver.Quit();
             }
         }
 
-        static void WebXPRT(string browser)
+        static void WebXPRT(string browser, RemoteWebDriver driver)
         {
             string path = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
 
             for (int i = 0; i < iterations; i++)
             {
-                driver = LaunchDriver(browser);
-                driver.Manage().Window.Maximize();
                 driver.Url = "http://www.principledtechnologies.com/benchmarkxprt/webxprt/2015/v19982/";
                 driver.FindElementById("imgRunAll").Click();
                 while (driver.Url != "http://www.principledtechnologies.com/benchmarkxprt/webxprt/2015/v19982/results.php?c=0")
                 {
-                    Thread.Sleep(1000);
+                    Thread.Sleep(10000);
                 }
                 var result =  driver.FindElementByCssSelector(".resultsOval>.scoreText").Text;
                 using (StreamWriter file = new StreamWriter(path, true))
                 {
                     file.WriteLine(string.Format("WebXPRT,{0},{1},{2},", browser, result, i + 1));
                 }
-                driver.Quit();
             }
         }
 
-        static void OORTOnline(string browser)
+        static void OORTOnline(string browser, RemoteWebDriver driver)
         {
             var directory = Directory.CreateDirectory(@"C:\EduPerfTests\");
             
             for (int i = 0; i < iterations; i++)
             {
-                var driver = LaunchDriver(browser);
                 driver.Manage().Window.Maximize();
                 driver.Url = "http://oortonline.gl/#run";
                 Thread.Sleep(600000);
                 driver.GetScreenshot().SaveAsFile(Path.Combine(directory.FullName, string.Format(@"{0}{1}.png", browser, i+1)), ImageFormat.Png);
-                driver.Quit();
             }
         }
     }
