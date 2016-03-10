@@ -145,7 +145,8 @@ namespace EduPerfTests
                 {
                     Thread.Sleep(2000);
                 }
-                var result = Convert.ToInt32(driver.ExecuteScript("return performance.timing.loadEventEnd - performance.timing.navigationStart;"));
+                var timing = driver.ExecuteScript("return performance.timing.loadEventEnd - performance.timing.navigationStart;");
+                var result = Convert.ToInt64(timing);
                 using (StreamWriter file = new StreamWriter(path, true))
                 {
                     file.WriteLine(string.Format("{0},{1},{2},{3},", site, browser, result, i + 1));
