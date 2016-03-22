@@ -4,8 +4,6 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.IE;
 using System.IO;
-using System.Threading;
-using System.Drawing.Imaging;
 using OpenQA.Selenium.Remote;
 using System.Collections.Generic;
 
@@ -75,8 +73,8 @@ namespace EduPerfTests
             if (selectedBrowsers.Contains("2")) browsers.Add("Chrome");
             if (selectedBrowsers.Contains("3")) browsers.Add("Firefox");
             if (selectedBrowsers.Contains("4")) browsers.Add("Internet Explorer");
+
             if (browsers.Count == 0) DetermineBrowsers();
-            return;
         }
 
         static void DetermineTests()
@@ -98,7 +96,8 @@ namespace EduPerfTests
             if (selectedTests.Contains("3")) tests.Add("JetStream");
             if (selectedTests.Contains("4")) tests.Add("WebXPRT");
             if (selectedTests.Contains("5")) tests.Add("OORTOnline");
-            if (browsers.Count == 0) DetermineTests();
+
+            if (tests.Count == 0) DetermineTests();
         }
 
         static RemoteWebDriver LaunchDriver(string browser)

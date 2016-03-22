@@ -1,13 +1,7 @@
-﻿using System;
-using OpenQA.Selenium.Edge;
-using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Firefox;
-using OpenQA.Selenium.IE;
-using System.IO;
+﻿using System.IO;
 using System.Threading;
 using System.Drawing.Imaging;
 using OpenQA.Selenium.Remote;
-using System.Collections.Generic;
 
 namespace EduPerfTests
 {
