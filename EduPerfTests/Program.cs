@@ -12,17 +12,15 @@ namespace EduPerfTests
     class Program
     {
         static RemoteWebDriver driver;
-        static List<String> browsers = new List<String>();
-        static List<String> tests = new List<String>();
-        static int iterations = 1;
+        static List<string> browsers = new List<string>();
+        static List<string> tests = new List<string>();
+        static int iterations = 0;
 
         static void Main(string[] args)
         {
             DetermineBrowsers();
             DetermineTests();
-
-            Console.WriteLine("Specify the number of iterations you would like to run:");
-            iterations = Int32.Parse(Console.ReadLine());
+            DetermineIterations();
 
             string perfPath = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
             using (StreamWriter file = new StreamWriter(perfPath))
@@ -98,6 +96,14 @@ namespace EduPerfTests
             if (selectedTests.Contains("5")) tests.Add("OORTOnline");
 
             if (tests.Count == 0) DetermineTests();
+        }
+
+        static void DetermineIterations()
+        {
+            Console.WriteLine("Specify the number of iterations you would like to run:");
+            Int32.TryParse(Console.ReadLine(), out iterations);
+
+            if (iterations == 0) DetermineIterations();
         }
 
         static RemoteWebDriver LaunchDriver(string browser)
