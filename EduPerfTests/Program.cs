@@ -22,13 +22,13 @@ namespace EduPerfTests
             DetermineTests();
             DetermineIterations();
 
-            string perfPath = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
+            var perfPath = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
             using (StreamWriter file = new StreamWriter(perfPath))
             {
                 file.WriteLine("Benchmark,Browser,Result,Iteration");
             }
 
-            string loadPath = string.Format(@"{0}\pageloadresults.csv", Directory.GetCurrentDirectory());
+            var loadPath = string.Format(@"{0}\pageloadresults.csv", Directory.GetCurrentDirectory());
             using (StreamWriter file = new StreamWriter(loadPath))
             {
                 file.WriteLine("Site,Browser,Result (ms),Iteration,");
@@ -101,7 +101,7 @@ namespace EduPerfTests
         static void DetermineIterations()
         {
             Console.WriteLine("Specify the number of iterations you would like to run:");
-            Int32.TryParse(Console.ReadLine(), out iterations);
+            int.TryParse(Console.ReadLine(), out iterations);
 
             if (iterations == 0) DetermineIterations();
         }

@@ -9,7 +9,7 @@ namespace EduPerfTests
     {
         public static void Octane(string browser, RemoteWebDriver driver, int iterations)
         {
-            string path = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
+            var path = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
 
             for (int i = 0; i < iterations; i++)
             {
@@ -29,7 +29,7 @@ namespace EduPerfTests
 
         public static void SunSpider(string browser, RemoteWebDriver driver, int iterations)
         {
-            string path = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
+            var path = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
 
             for (int i = 0; i < iterations; i++)
             {
@@ -52,7 +52,7 @@ namespace EduPerfTests
 
         public static void JetStream(string browser, RemoteWebDriver driver, int iterations)
         {
-            string path = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
+            var path = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
 
             for (int i = 0; i < iterations; i++)
             {
@@ -72,7 +72,7 @@ namespace EduPerfTests
 
         public static void WebXPRT(string browser, RemoteWebDriver driver, int iterations)
         {
-            string path = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
+            var path = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
 
             for (int i = 0; i < iterations; i++)
             {
