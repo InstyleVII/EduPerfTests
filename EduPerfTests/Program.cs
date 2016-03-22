@@ -46,14 +46,14 @@ namespace EduPerfTests
                 if (tests.Contains("JetStream")) Performance.JetStream(browser, driver, iterations);
                 if (tests.Contains("WebXPRT")) Performance.WebXPRT(browser, driver, iterations);
                 if (tests.Contains("OORTOnline")) Performance.OORTOnline(browser, driver, iterations);
-                SiteLoadTime("http://www.bing.com/mapspreview", browser, driver);
-                SiteLoadTime("https://www.brainpop.com/", browser, driver);
-                SiteLoadTime("https://www.edmodo.com/", browser, driver);
-                SiteLoadTime("https://www.google.com/maps", browser, driver);
-                SiteLoadTime("https://www.biodigital.com/", browser, driver);
-                SiteLoadTime("http://www.jpl.nasa.gov/", browser, driver);
-                SiteLoadTime("https://www.khanacademy.org/", browser, driver);
-                SiteLoadTime("https://scratch.mit.edu/", browser, driver);
+                PageLoad.SiteLoadTime("http://www.bing.com/mapspreview", browser, driver, iterations);
+                PageLoad.SiteLoadTime("https://www.brainpop.com/", browser, driver, iterations);
+                PageLoad.SiteLoadTime("https://www.edmodo.com/", browser, driver, iterations);
+                PageLoad.SiteLoadTime("https://www.google.com/maps", browser, driver, iterations);
+                PageLoad.SiteLoadTime("https://www.biodigital.com/", browser, driver, iterations);
+                PageLoad.SiteLoadTime("http://www.jpl.nasa.gov/", browser, driver, iterations);
+                PageLoad.SiteLoadTime("https://www.khanacademy.org/", browser, driver, iterations);
+                PageLoad.SiteLoadTime("https://scratch.mit.edu/", browser, driver, iterations);
                 driver.Quit();
             }
         }
@@ -132,27 +132,5 @@ namespace EduPerfTests
 
             return driver;
         }
-
-        static void SiteLoadTime(string site, string browser, RemoteWebDriver driver)
-        {
-            string path = string.Format(@"{0}\pageloadresults.csv", Directory.GetCurrentDirectory());
-            
-            for (int i = 0; i < iterations; i++)
-            {
-                driver.Manage().Window.Maximize();
-                driver.Url = site;
-                if (browser == "Edge")
-                {
-                    Thread.Sleep(2000);
-                }
-                var timing = driver.ExecuteScript("return performance.timing.loadEventEnd - performance.timing.navigationStart;");
-                var result = Convert.ToInt64(timing);
-                using (StreamWriter file = new StreamWriter(path, true))
-                {
-                    file.WriteLine(string.Format("{0},{1},{2},{3},", site, browser, result, i + 1));
-                }
-            }
-        }
-
     }
 }
