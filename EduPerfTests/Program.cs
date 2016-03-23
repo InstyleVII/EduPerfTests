@@ -6,6 +6,7 @@ using OpenQA.Selenium.IE;
 using System.IO;
 using OpenQA.Selenium.Remote;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace EduPerfTests
 {
@@ -13,14 +14,18 @@ namespace EduPerfTests
     {
         static RemoteWebDriver driver;
         static List<string> browsers = new List<string>();
-        static List<string> tests = new List<string>();
-        static int iterations = 0;
+        static List<string> performanceTests = new List<string>();
+        static List<string> pageLoadSites = new List<string>();
+        static int performanceIterations = 0;
+        static int pageLoadIterations = 0;
 
         static void Main(string[] args)
         {
             DetermineBrowsers();
-            DetermineTests();
-            DetermineIterations();
+            DeterminePerformanceTests();
+            DeterminePerformanceIterations();
+            DeterminePageLoadSites();
+            DeterminePageLoadIterations();
 
             var perfPath = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
             using (StreamWriter file = new StreamWriter(perfPath))
@@ -37,19 +42,21 @@ namespace EduPerfTests
             foreach (var browser in browsers)
             {
                 var driver = LaunchDriver(browser);
-                if (tests.Contains("Octane")) Performance.Octane(browser, driver, iterations);
-                if (tests.Contains("SunSpider")) Performance.SunSpider(browser, driver, iterations);
-                if (tests.Contains("JetStream")) Performance.JetStream(browser, driver, iterations);
-                if (tests.Contains("WebXPRT")) Performance.WebXPRT(browser, driver, iterations);
-                if (tests.Contains("OORTOnline")) Performance.OORTOnline(browser, driver, iterations);
-                PageLoad.SiteLoadTime("http://www.bing.com/mapspreview", browser, driver, iterations);
-                PageLoad.SiteLoadTime("https://www.brainpop.com/", browser, driver, iterations);
-                PageLoad.SiteLoadTime("https://www.edmodo.com/", browser, driver, iterations);
-                PageLoad.SiteLoadTime("https://www.google.com/maps", browser, driver, iterations);
-                PageLoad.SiteLoadTime("https://www.biodigital.com/", browser, driver, iterations);
-                PageLoad.SiteLoadTime("http://www.jpl.nasa.gov/", browser, driver, iterations);
-                PageLoad.SiteLoadTime("https://www.khanacademy.org/", browser, driver, iterations);
-                PageLoad.SiteLoadTime("https://scratch.mit.edu/", browser, driver, iterations);
+                if (performanceTests.Count > 0)
+                {
+                    if (performanceTests.Contains("Octane")) Performance.Octane(browser, driver, performanceIterations);
+                    if (performanceTests.Contains("SunSpider")) Performance.SunSpider(browser, driver, performanceIterations);
+                    if (performanceTests.Contains("JetStream")) Performance.JetStream(browser, driver, performanceIterations);
+                    if (performanceTests.Contains("WebXPRT")) Performance.WebXPRT(browser, driver, performanceIterations);
+                    if (performanceTests.Contains("OORTOnline")) Performance.OORTOnline(browser, driver, performanceIterations);
+                }
+                if (pageLoadSites.Count > 0)
+                {
+                    foreach (var site in pageLoadSites)
+                    {
+                        PageLoad.SiteLoadTime(site, browser, driver, pageLoadIterations);
+                    }
+                }
                 driver.Quit();
             }
         }
@@ -75,35 +82,56 @@ namespace EduPerfTests
             if (browsers.Count == 0) DetermineBrowsers();
         }
 
-        static void DetermineTests()
+        static void DeterminePerformanceTests()
         {
             Console.WriteLine("Specify the test(s) you would like to run:\n1. Octane\n2. SunSpider\n3. JetStream\n4. WebXPRT\n5. OORTOnline\n6. All");
             var selectedTests = Console.ReadLine();
 
             if (selectedTests.Contains("6"))
             {
-                tests.Add("Octane");
-                tests.Add("SunSpider");
-                tests.Add("JetStream");
-                tests.Add("WebXPRT");
-                tests.Add("OORTOnline");
+                performanceTests.Add("Octane");
+                performanceTests.Add("SunSpider");
+                performanceTests.Add("JetStream");
+                performanceTests.Add("WebXPRT");
+                performanceTests.Add("OORTOnline");
                 return;
             }
-            if (selectedTests.Contains("1")) tests.Add("Octane");
-            if (selectedTests.Contains("2")) tests.Add("SunSpider");
-            if (selectedTests.Contains("3")) tests.Add("JetStream");
-            if (selectedTests.Contains("4")) tests.Add("WebXPRT");
-            if (selectedTests.Contains("5")) tests.Add("OORTOnline");
+            if (selectedTests.Contains("1")) performanceTests.Add("Octane");
+            if (selectedTests.Contains("2")) performanceTests.Add("SunSpider");
+            if (selectedTests.Contains("3")) performanceTests.Add("JetStream");
+            if (selectedTests.Contains("4")) performanceTests.Add("WebXPRT");
+            if (selectedTests.Contains("5")) performanceTests.Add("OORTOnline");
 
-            if (tests.Count == 0) DetermineTests();
+            if (performanceTests.Count == 0) DeterminePerformanceTests();
         }
 
-        static void DetermineIterations()
+        static void DeterminePerformanceIterations()
         {
             Console.WriteLine("Specify the number of iterations you would like to run:");
-            int.TryParse(Console.ReadLine(), out iterations);
+            int.TryParse(Console.ReadLine(), out performanceIterations);
 
-            if (iterations == 0) DetermineIterations();
+            if (performanceIterations == 0) DeterminePerformanceIterations();
+        }
+
+        static void DeterminePageLoadSites()
+        {
+            Console.WriteLine("Specify the path to the csv file containing the sites you would like to test:");
+            var path = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(path)) DeterminePageLoadSites();
+            using (var reader = new StreamReader(path))
+            {
+                var input = reader.ReadToEnd();
+                pageLoadSites = input.Split(',').ToList();
+            }
+        }
+
+        static void DeterminePageLoadIterations()
+        {
+            Console.WriteLine("Specify the number of iterations you would like to run:");
+            int.TryParse(Console.ReadLine(), out pageLoadIterations);
+
+            if (pageLoadIterations == 0) DeterminePageLoadIterations();
         }
 
         static RemoteWebDriver LaunchDriver(string browser)
