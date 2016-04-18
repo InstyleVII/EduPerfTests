@@ -7,6 +7,7 @@ using System.IO;
 using OpenQA.Selenium.Remote;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace EduPerfTests
 {
@@ -155,6 +156,7 @@ namespace EduPerfTests
                     default:
                         driver = new EdgeDriver();
                         driver.Manage().Window.Maximize();
+                        Thread.Sleep(2000);
                         break;
                 }
             }
