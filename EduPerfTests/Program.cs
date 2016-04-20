@@ -130,7 +130,14 @@ namespace EduPerfTests
             {
                 var input = reader.ReadToEnd();                
                 pageLoadSites = input.Split(',').ToList();
-            }            
+            }
+
+            int count = 0;
+            foreach(var site in pageLoadSites)
+            {
+                Console.WriteLine(count.ToString() + "-" + site);
+                count++;
+            }
 
             DeterminePageLoadIterations();
         }
@@ -150,23 +157,21 @@ namespace EduPerfTests
                 switch (browser)
                 {
                     case "Firefox":
-                        driver = new FirefoxDriver();
-                        driver.Manage().Window.Maximize();
+                        driver = new FirefoxDriver();                      
                         break;
                     case "Chrome":
                         driver = new ChromeDriver();
-                        driver.Manage().Window.Maximize();
                         break;
                     case "Internet Explorer":
                         driver = new InternetExplorerDriver();
-                        driver.Manage().Window.Maximize();
                         break;
                     default:
-                        driver = new EdgeDriver();
-                        driver.Manage().Window.Maximize();
+                        driver = new EdgeDriver();                        
                         Thread.Sleep(2000);
                         break;
                 }
+
+                driver.Manage().Window.Maximize();
             }
             catch (Exception ex)
             {

@@ -14,6 +14,8 @@ namespace EduPerfTests
             for (int i = 0; i < iterations; i++)
             {
                 driver.Url = "http://chromium.github.io/octane/";
+
+                // Clicking in ExecuteScript to avoid border radius Web Driver Interop bug
                 driver.ExecuteScript("document.getElementById('run-octane').click();");
                 while (!driver.FindElementById("main-banner").Text.Contains("Octane Score:"))
                 {
@@ -96,7 +98,6 @@ namespace EduPerfTests
 
             for (int i = 0; i < iterations; i++)
             {
-                driver.Manage().Window.Maximize();
                 driver.Url = "http://oortonline.gl/#run";
                 Thread.Sleep(600000);
                 driver.GetScreenshot().SaveAsFile(Path.Combine(directory.FullName, string.Format(@"{0}{1}.png", browser, i + 1)), ImageFormat.Png);
