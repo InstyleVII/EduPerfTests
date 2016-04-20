@@ -24,9 +24,7 @@ namespace EduPerfTests
         {
             DetermineBrowsers();
             DeterminePerformanceTests();
-            DeterminePerformanceIterations();
-            DeterminePageLoadSites();
-            DeterminePageLoadIterations();
+            DeterminePageLoadSites();            
 
             var perfPath = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
             using (StreamWriter file = new StreamWriter(perfPath))
@@ -51,6 +49,7 @@ namespace EduPerfTests
                     if (performanceTests.Contains("WebXPRT")) Performance.WebXPRT(browser, driver, performanceIterations);
                     if (performanceTests.Contains("OORTOnline")) Performance.OORTOnline(browser, driver, performanceIterations);
                 }
+
                 if (pageLoadSites.Count > 0)
                 {
                     foreach (var site in pageLoadSites)
@@ -85,8 +84,13 @@ namespace EduPerfTests
 
         static void DeterminePerformanceTests()
         {
-            Console.WriteLine("Specify the test(s) you would like to run:\n1. Octane\n2. SunSpider\n3. JetStream\n4. WebXPRT\n5. OORTOnline\n6. All");
+            Console.WriteLine("Specify the test(s) you would like to run:\n1. Octane\n2. SunSpider\n3. JetStream\n4. WebXPRT\n5. OORTOnline\n6. All\n7. Skip to Page Load");
             var selectedTests = Console.ReadLine();
+            
+            if (selectedTests.Contains("7"))
+            {
+                return;
+            }
 
             if (selectedTests.Contains("6"))
             {
@@ -104,6 +108,8 @@ namespace EduPerfTests
             if (selectedTests.Contains("5")) performanceTests.Add("OORTOnline");
 
             if (performanceTests.Count == 0) DeterminePerformanceTests();
+
+            DeterminePerformanceIterations();
         }
 
         static void DeterminePerformanceIterations()
@@ -116,15 +122,17 @@ namespace EduPerfTests
 
         static void DeterminePageLoadSites()
         {
-            Console.WriteLine("Specify the path to the csv file containing the sites you would like to test:");
+            Console.WriteLine("Specify the path to the csv file containing the sites you would like to test (blank to skip):");
             var path = Console.ReadLine();
 
-            if (string.IsNullOrWhiteSpace(path)) DeterminePageLoadSites();
+            if (string.IsNullOrWhiteSpace(path)) return;
             using (var reader = new StreamReader(path))
             {
-                var input = reader.ReadToEnd();
+                var input = reader.ReadToEnd();                
                 pageLoadSites = input.Split(',').ToList();
-            }
+            }            
+
+            DeterminePageLoadIterations();
         }
 
         static void DeterminePageLoadIterations()
