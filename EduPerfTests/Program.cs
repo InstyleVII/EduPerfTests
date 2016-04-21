@@ -39,7 +39,7 @@ namespace EduPerfTests
             PageLoad.Resultsfile = loadPath;
             using (StreamWriter file = new StreamWriter(loadPath))
             {
-                file.WriteLine("Site,Browser,Result (ms),Iteration,");
+                file.WriteLine("Site,Browser,Result (ms),Iteration,Retry");
             }
 
             foreach (var browser in browsers)
@@ -112,7 +112,12 @@ namespace EduPerfTests
             if (selectedBrowsers.Contains("3")) browsers.Add("Firefox");
             if (selectedBrowsers.Contains("4")) browsers.Add("Internet Explorer");
 
-            if (browsers.Count == 0) DetermineBrowsers();
+            if (browsers.Count == 0)
+            {
+                Console.WriteLine("Unable to determine what browser you meant by '{0}'. Please try again.", selectedBrowsers);
+                DetermineBrowsers();
+                return;
+            }
         }
 
         private static void PrintInstructions()
@@ -154,7 +159,12 @@ namespace EduPerfTests
             if (selectedTests.Contains("4")) performanceTests.Add("WebXPRT");
             if (selectedTests.Contains("5")) performanceTests.Add("OORTOnline");
 
-            if (performanceTests.Count == 0) DeterminePerformanceTests();
+            if (performanceTests.Count == 0)
+            {
+                Console.WriteLine("Unable to determine what performance test you meant by '{0}'. Please try again.", selectedTests);
+                DeterminePerformanceTests();
+                return;
+            }
 
             DeterminePerformanceIterations();
         }
@@ -227,7 +237,9 @@ namespace EduPerfTests
                         driver = new InternetExplorerDriver();
                         break;
                     default:
-                        driver = new EdgeDriver();                        
+                        driver = new EdgeDriver();
+                        
+                        // This sleep allows Edge Anniversary Update to workaround a bug where it doesn't properly wait for about:blank                     
                         Thread.Sleep(2000);
                         break;
                 }

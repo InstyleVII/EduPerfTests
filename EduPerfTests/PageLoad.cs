@@ -57,6 +57,10 @@ namespace EduPerfTests
                     {
                         retry = true;
                     }
+                    else
+                    {
+                        throw;
+                    }
                 }
             }
         }
