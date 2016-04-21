@@ -24,20 +24,22 @@ namespace EduPerfTests
         {
             DetermineBrowsers();
             DeterminePerformanceTests();
-            DeterminePerformanceIterations();
             DeterminePageLoadSites();
-            DeterminePageLoadIterations();
+            var perfFileName = "performancetestresults";
+            var pageLoadResultsFileName = "pageloadresults";
 
-            var perfPath = string.Format(@"{0}\performancetestresults.csv", Directory.GetCurrentDirectory());
+            var perfPath = TestFileLocation(perfFileName);
+            Performance.ResultsFile = perfPath;
             using (StreamWriter file = new StreamWriter(perfPath))
             {
                 file.WriteLine("Benchmark,Browser,Result,Iteration");
             }
 
-            var loadPath = string.Format(@"{0}\pageloadresults.csv", Directory.GetCurrentDirectory());
+            var loadPath = TestFileLocation(pageLoadResultsFileName);
+            PageLoad.Resultsfile = loadPath;
             using (StreamWriter file = new StreamWriter(loadPath))
             {
-                file.WriteLine("Site,Browser,Result (ms),Iteration,");
+                file.WriteLine("Site,Browser,Result (ms),Iteration,Retry");
             }
 
             foreach (var browser in browsers)
@@ -51,6 +53,7 @@ namespace EduPerfTests
                     if (performanceTests.Contains("WebXPRT")) Performance.WebXPRT(browser, driver, performanceIterations);
                     if (performanceTests.Contains("OORTOnline")) Performance.OORTOnline(browser, driver, performanceIterations);
                 }
+
                 if (pageLoadSites.Count > 0)
                 {
                     foreach (var site in pageLoadSites)
@@ -62,10 +65,39 @@ namespace EduPerfTests
             }
         }
 
+        /// <summary>
+        /// This method takes in a fileName then looks for it int he current directory.
+        /// </summary>
+        /// <param name="fileName">The file name to test</param>
+        /// <returns></returns>
+        private static string TestFileLocation(string fileName)
+        {
+            var tempFileName = fileName;
+            var currentPath = string.Format(@"{0}\", Directory.GetCurrentDirectory());
+            var newFilePath = currentPath + string.Format(@"{0}.csv", tempFileName);
+
+            int count = 0;
+            while (File.Exists(newFilePath))
+            {
+                tempFileName = fileName + count.ToString();
+                newFilePath = currentPath + string.Format(@"{0}.csv", tempFileName);
+                count++;
+            }
+
+            return newFilePath;
+        }
+
         static void DetermineBrowsers()
         {
-            Console.WriteLine("Welcome to the Education Performance Test Suite.\n Specify the browser(s) you would like to test:\n1. Edge\n2. Chrome\n3. Firefox\n4. Internet Explorer\n5. All");
+            Console.WriteLine("Welcome to the Education Performance Test Suite.\n Specify the browser(s) you would like to test:\n1. Edge\n2. Chrome\n3. Firefox\n4. Internet Explorer\n5. All\n6. Instructions");
             var selectedBrowsers = Console.ReadLine();
+
+            if (selectedBrowsers.Contains("6"))
+            {
+                PrintInstructions();
+                DetermineBrowsers();
+                return;
+            }
 
             if (selectedBrowsers.Contains("5"))
             {
@@ -80,13 +112,37 @@ namespace EduPerfTests
             if (selectedBrowsers.Contains("3")) browsers.Add("Firefox");
             if (selectedBrowsers.Contains("4")) browsers.Add("Internet Explorer");
 
-            if (browsers.Count == 0) DetermineBrowsers();
+            if (browsers.Count == 0)
+            {
+                Console.WriteLine("Unable to determine what browser you meant by '{0}'. Please try again.", selectedBrowsers);
+                DetermineBrowsers();
+                return;
+            }
+        }
+
+        private static void PrintInstructions()
+        {
+            // TODO: Consider moving instructions to Exception paths to help users
+            // For Web Driver, we currently put things in the PATH.ChromeDriver / EdgeDriver / InternetExplorerDriver require this.They also take a path if we wanted to automate / package.
+            Console.WriteLine("Ensure all WebDriver servers are in a folder specified in PATH");
+            Console.WriteLine("Chrome https://sites.google.com/a/chromium.org/chromedriver/downloads");
+            Console.WriteLine("Firefox (Built in so no download is required");
+            Console.WriteLine(@"Microsoft Edge Internal build can be found in following relative path from build folder x86fre\bin\spartan\MicrosoftWebDriver.exe");
+            Console.WriteLine("Microsoft Edge Fall 2015 can be found at https://www.microsoft.com/en-us/download/details.aspx?id=49962");
+            Console.WriteLine("Microsoft Edge Current Insider can be found at https://www.microsoft.com/en-us/download/details.aspx?id=48740");
+            Console.WriteLine("IE11 can be found at http://docs.seleniumhq.org/download/");
+            Console.WriteLine("Making IE11 work requires Enabling Protected mode for all Zones in Security tab of IE Settings and unblocking firewall for webdriver");
         }
 
         static void DeterminePerformanceTests()
         {
-            Console.WriteLine("Specify the test(s) you would like to run:\n1. Octane\n2. SunSpider\n3. JetStream\n4. WebXPRT\n5. OORTOnline\n6. All");
+            Console.WriteLine("Specify the test(s) you would like to run:\n1. Octane\n2. SunSpider\n3. JetStream\n4. WebXPRT\n5. OORTOnline\n6. All\n7. Skip to Page Load");
             var selectedTests = Console.ReadLine();
+            
+            if (selectedTests.Contains("7"))
+            {
+                return;
+            }
 
             if (selectedTests.Contains("6"))
             {
@@ -103,7 +159,14 @@ namespace EduPerfTests
             if (selectedTests.Contains("4")) performanceTests.Add("WebXPRT");
             if (selectedTests.Contains("5")) performanceTests.Add("OORTOnline");
 
-            if (performanceTests.Count == 0) DeterminePerformanceTests();
+            if (performanceTests.Count == 0)
+            {
+                Console.WriteLine("Unable to determine what performance test you meant by '{0}'. Please try again.", selectedTests);
+                DeterminePerformanceTests();
+                return;
+            }
+
+            DeterminePerformanceIterations();
         }
 
         static void DeterminePerformanceIterations()
@@ -116,15 +179,38 @@ namespace EduPerfTests
 
         static void DeterminePageLoadSites()
         {
-            Console.WriteLine("Specify the path to the csv file containing the sites you would like to test:");
+            Console.WriteLine("Specify the path to the csv file containing the sites you would like to test (blank to skip):");
             var path = Console.ReadLine();
 
-            if (string.IsNullOrWhiteSpace(path)) DeterminePageLoadSites();
+            if (string.IsNullOrWhiteSpace(path)) return;
             using (var reader = new StreamReader(path))
             {
-                var input = reader.ReadToEnd();
+                var input = reader.ReadToEnd();            
                 pageLoadSites = input.Split(',').ToList();
             }
+
+            // Starting count at 1 so it correlates with user chosen site start count
+            int count = 1;
+            foreach(var site in pageLoadSites)
+            {
+                Console.WriteLine(count.ToString() + "-" + site);
+                count++;
+            }
+
+            DeterminePageLoadSiteStart();
+            DeterminePageLoadIterations();
+        }
+
+        private static void DeterminePageLoadSiteStart()
+        {
+            int startingSite;
+            Console.WriteLine("Specify the site number to start with. The first item is 1. (blank to run all sites):");
+            var input = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(input)) return;
+
+            startingSite = int.Parse(input);
+
+            pageLoadSites.RemoveRange(0, startingSite - 1);
         }
 
         static void DeterminePageLoadIterations()
@@ -142,23 +228,23 @@ namespace EduPerfTests
                 switch (browser)
                 {
                     case "Firefox":
-                        driver = new FirefoxDriver();
-                        driver.Manage().Window.Maximize();
+                        driver = new FirefoxDriver();                      
                         break;
                     case "Chrome":
                         driver = new ChromeDriver();
-                        driver.Manage().Window.Maximize();
                         break;
                     case "Internet Explorer":
                         driver = new InternetExplorerDriver();
-                        driver.Manage().Window.Maximize();
                         break;
                     default:
                         driver = new EdgeDriver();
-                        driver.Manage().Window.Maximize();
+                        
+                        // This sleep allows Edge Anniversary Update to workaround a bug where it doesn't properly wait for about:blank                     
                         Thread.Sleep(2000);
                         break;
                 }
+
+                driver.Manage().Window.Maximize();
             }
             catch (Exception ex)
             {
