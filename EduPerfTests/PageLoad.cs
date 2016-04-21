@@ -8,9 +8,10 @@ namespace EduPerfTests
 {
     public class PageLoad
     {
+        public static string Resultsfile { get; internal set; }
+
         public static void SiteLoadTime(string site, string browser, RemoteWebDriver driver, int iterations)
         {
-            var path = string.Format(@"{0}\pageloadresults.csv", Directory.GetCurrentDirectory());
             bool retry = false;
             for (int i = 0; i < iterations; i++)
             {                
@@ -21,7 +22,7 @@ namespace EduPerfTests
                 }
                 else
                 {
-                    Console.WriteLine("siteloadtime-" + site);
+                    Console.WriteLine("Recording Site Load Time For-" + site);
                 }
 
                 
@@ -38,7 +39,7 @@ namespace EduPerfTests
                 {
                     var timing = driver.ExecuteScript("return performance.timing.loadEventEnd - performance.timing.navigationStart;");
                     var result = Convert.ToInt64(timing);
-                    using (StreamWriter file = new StreamWriter(path, true))
+                    using (StreamWriter file = new StreamWriter(Resultsfile, true))
                     {
                         file.WriteLine(string.Format("{0},{1},{2},{3},{4}", site, browser, result, i + 1, retry));
                     }
