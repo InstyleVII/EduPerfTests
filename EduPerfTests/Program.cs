@@ -1,20 +1,20 @@
-﻿using System;
+﻿using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Edge;
-using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.IE;
-using System.IO;
 using OpenQA.Selenium.Remote;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
+using static EduPerfTests.Utils;
 
 namespace EduPerfTests
 {
     class Program
     {
-        static RemoteWebDriver driver;
-        static List<string> browsers = new List<string>();
+        static Browser chosenBrowsers;
         static List<string> performanceTests = new List<string>();
         static List<string> pageLoadSites = new List<string>();
         static int performanceIterations = 0;
@@ -25,71 +25,54 @@ namespace EduPerfTests
             DetermineBrowsers();
             DeterminePerformanceTests();
             DeterminePageLoadSites();
-            var perfFileName = "performancetestresults";
-            var pageLoadResultsFileName = "pageloadresults";
+            RunPerformance();
+            RunPageLoad();
+        }
 
-            var perfPath = TestFileLocation(perfFileName);
-            Performance.ResultsFile = perfPath;
-            using (StreamWriter file = new StreamWriter(perfPath))
+        private static void RunPageLoad()
+        {
+            if (pageLoadSites.Count > 0)
             {
-                file.WriteLine("Benchmark,Browser,Result,Iteration");
-            }
-
-            var loadPath = TestFileLocation(pageLoadResultsFileName);
-            PageLoad.Resultsfile = loadPath;
-            using (StreamWriter file = new StreamWriter(loadPath))
-            {
-                file.WriteLine("Site,Browser,Result (ms),Iteration,Retry");
-            }
-
-            foreach (var browser in browsers)
-            {
-                var driver = LaunchDriver(browser);
-                if (performanceTests.Count > 0)
+                using (PageLoad pageLoader = new PageLoad())
                 {
-                    if (performanceTests.Contains("Octane")) Performance.Octane(browser, driver, performanceIterations);
-                    if (performanceTests.Contains("SunSpider")) Performance.SunSpider(browser, driver, performanceIterations);
-                    if (performanceTests.Contains("JetStream")) Performance.JetStream(browser, driver, performanceIterations);
-                    if (performanceTests.Contains("WebXPRT")) Performance.WebXPRT(browser, driver, performanceIterations);
-                    if (performanceTests.Contains("OORTOnline")) Performance.OORTOnline(browser, driver, performanceIterations);
-                }
-
-                if (pageLoadSites.Count > 0)
-                {
-                    foreach (var site in pageLoadSites)
+                    foreach (Browser browser in chosenBrowsers.ChosenBrowsers())
                     {
-                        PageLoad.SiteLoadTime(site, browser, driver, pageLoadIterations);
+                        using (var driver = LaunchDriver(browser))
+                        {
+                            foreach (var site in pageLoadSites)
+                            {
+                                pageLoader.SiteLoadTime(site, browser, driver, pageLoadIterations);
+                            }
+                        }
                     }
                 }
-                driver.Quit();
             }
         }
 
-        /// <summary>
-        /// This method takes in a fileName then looks for it int he current directory.
-        /// </summary>
-        /// <param name="fileName">The file name to test</param>
-        /// <returns></returns>
-        private static string TestFileLocation(string fileName)
+        private static void RunPerformance()
         {
-            var tempFileName = fileName;
-            var currentPath = string.Format(@"{0}\", Directory.GetCurrentDirectory());
-            var newFilePath = currentPath + string.Format(@"{0}.csv", tempFileName);
-
-            int count = 0;
-            while (File.Exists(newFilePath))
+            if (performanceTests.Count > 0)
             {
-                tempFileName = fileName + count.ToString();
-                newFilePath = currentPath + string.Format(@"{0}.csv", tempFileName);
-                count++;
+                using (Performance performanceTester = new Performance())
+                {
+                    foreach (Browser browser in chosenBrowsers.ChosenBrowsers())
+                    {
+                        using (var driver = LaunchDriver(browser))
+                        {
+                            if (performanceTests.Contains("Octane")) performanceTester.Octane(browser, driver, performanceIterations);
+                            if (performanceTests.Contains("SunSpider")) performanceTester.SunSpider(browser, driver, performanceIterations);
+                            if (performanceTests.Contains("JetStream")) performanceTester.JetStream(browser, driver, performanceIterations);
+                            if (performanceTests.Contains("WebXPRT")) performanceTester.WebXPRT(browser, driver, performanceIterations);
+                            if (performanceTests.Contains("OORTOnline")) performanceTester.OORTOnline(browser, driver, performanceIterations);
+                        }
+                    }
+                }
             }
-
-            return newFilePath;
         }
 
         static void DetermineBrowsers()
         {
-            Console.WriteLine("Welcome to the Education Performance Test Suite.\n Specify the browser(s) you would like to test:\n1. Edge\n2. Chrome\n3. Firefox\n4. Internet Explorer\n5. All\n6. Instructions");
+            Console.WriteLine("Welcome to the Education Performance Test Suite.\n Specify the browser(s) you would like to test:\n1. Edge\n2. Chrome\n3. Firefox\n4. Internet Explorer\n5. All (except IE)\n6. Instructions");
             var selectedBrowsers = Console.ReadLine();
 
             if (selectedBrowsers.Contains("6"))
@@ -101,18 +84,16 @@ namespace EduPerfTests
 
             if (selectedBrowsers.Contains("5"))
             {
-                browsers.Add("Edge");
-                browsers.Add("Chrome");
-                browsers.Add("Firefox");
-                browsers.Add("Internet Explorer");
+                chosenBrowsers = Browser.All;
                 return;
             }
-            if (selectedBrowsers.Contains("1")) browsers.Add("Edge");
-            if (selectedBrowsers.Contains("2")) browsers.Add("Chrome");
-            if (selectedBrowsers.Contains("3")) browsers.Add("Firefox");
-            if (selectedBrowsers.Contains("4")) browsers.Add("Internet Explorer");
+            
+            if (selectedBrowsers.Contains("1")) chosenBrowsers = chosenBrowsers | Browser.MicrosoftEdge;
+            if (selectedBrowsers.Contains("2")) chosenBrowsers = chosenBrowsers | Browser.Chrome;
+            if (selectedBrowsers.Contains("3")) chosenBrowsers = chosenBrowsers | Browser.Firefox;
+            if (selectedBrowsers.Contains("4")) chosenBrowsers = chosenBrowsers | Browser.InternetExplorer;
 
-            if (browsers.Count == 0)
+            if (chosenBrowsers == 0)
             {
                 Console.WriteLine("Unable to determine what browser you meant by '{0}'. Please try again.", selectedBrowsers);
                 DetermineBrowsers();
@@ -151,8 +132,8 @@ namespace EduPerfTests
                 performanceTests.Add("JetStream");
                 performanceTests.Add("WebXPRT");
                 performanceTests.Add("OORTOnline");
-                return;
             }
+
             if (selectedTests.Contains("1")) performanceTests.Add("Octane");
             if (selectedTests.Contains("2")) performanceTests.Add("SunSpider");
             if (selectedTests.Contains("3")) performanceTests.Add("JetStream");
@@ -221,37 +202,49 @@ namespace EduPerfTests
             if (pageLoadIterations == 0) DeterminePageLoadIterations();
         }
 
-        static RemoteWebDriver LaunchDriver(string browser)
+        static RemoteWebDriver LaunchDriver(Browser browser)
         {
+            Console.WriteLine("Starting browser: {0}", browser);
             try
             {
+                RemoteWebDriver driver;
+
                 switch (browser)
                 {
-                    case "Firefox":
+                    case Browser.Firefox:
                         driver = new FirefoxDriver();                      
                         break;
-                    case "Chrome":
+                    case Browser.Chrome:
                         driver = new ChromeDriver();
                         break;
-                    case "Internet Explorer":
+                    case Browser.InternetExplorer:
                         driver = new InternetExplorerDriver();
                         break;
-                    default:
+                    case Browser.MicrosoftEdge:
                         driver = new EdgeDriver();
                         
-                        // This sleep allows Edge Anniversary Update to workaround a bug where it doesn't properly wait for about:blank                     
+                        // This sleep allows Microsoft Edge Anniversary Update to workaround a bug where it doesn't properly wait for about:blank   
+                        // This bug COULD occur in Fall Update 2016 but would be much rarer.
+                        // It should be fixed ~May 15th in Anniversary Update. 5129594                  
                         Thread.Sleep(2000);
                         break;
+                    default:
+                        throw new Exception(string.Format("Unexpected browser: {0}", browser));
                 }
 
                 driver.Manage().Window.Maximize();
+
+                // It appears visually that some browsers may not complete all work before returning from maximize. Sleeping for paranois.
+                // We should test the navigate times with and without sleep to know for certain.
+                Thread.Sleep(1000);
+
+                return driver;
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Failed to launch {0}, ERROR: {1}", browser, ex.Message);
+                throw;
             }
-
-            return driver;
         }
     }
 }

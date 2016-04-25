@@ -1,15 +1,43 @@
-﻿using System.IO;
-using System.Threading;
+﻿using OpenQA.Selenium.Remote;
+using System;
 using System.Drawing.Imaging;
-using OpenQA.Selenium.Remote;
+using System.IO;
+using System.Threading;
+using static EduPerfTests.Utils;
 
 namespace EduPerfTests
 {
-    public class Performance
+    public class Performance : IDisposable
     {
-        public static string ResultsFile { get; internal set; }
+        StreamWriter logFile;
+        bool logInitialized = false;
 
-        public static void Octane(string browser, RemoteWebDriver driver, int iterations)
+        public Performance()
+        {
+            const string pageLoadResultsFileName = "performancetestresults";
+            var loadPath = Utils.TestFileLocation(pageLoadResultsFileName);
+            logFile = new StreamWriter(loadPath);
+        }
+
+        public void Dispose()
+        {
+            if (logFile != null)
+            {
+                logFile.Dispose();
+                logFile = null;
+            }
+        }
+
+        void initializeLog()
+        {
+            if (!logInitialized)
+            {
+                logFile.WriteLine("Benchmark,Browser,Result,Iteration");
+                logInitialized = true;
+            }
+        }
+
+        public void Octane(Browser browser, RemoteWebDriver driver, int iterations)
         {
             for (int i = 0; i < iterations; i++)
             {
@@ -22,14 +50,11 @@ namespace EduPerfTests
                     Thread.Sleep(10000);
                 }
                 var result = driver.FindElementById("main-banner").Text.Substring(14);
-                using (StreamWriter file = new StreamWriter(ResultsFile, true))
-                {
-                    file.WriteLine(string.Format("Octane,{0},{1},{2},", browser, result, i + 1));
-                }
+                logFile.WriteLine(string.Format("Octane,{0},{1},{2},", browser, result, i + 1));
             }
         }
 
-        public static void SunSpider(string browser, RemoteWebDriver driver, int iterations)
+        public void SunSpider(Browser browser, RemoteWebDriver driver, int iterations)
         {
             for (int i = 0; i < iterations; i++)
             {
@@ -39,36 +64,34 @@ namespace EduPerfTests
                     Thread.Sleep(10000);
                 }
                 var result = driver.FindElementById("console").Text.Substring(161, 5);
-                if (browser == "Edge")
+
+                if (browser == Browser.MicrosoftEdge)
                 {
                     result = driver.FindElementById("console").Text.Substring(165, 5);
                 }
-                using (StreamWriter file = new StreamWriter(ResultsFile, true))
-                {
-                    file.WriteLine(string.Format("SunSpider,{0},{1},{2},", browser, result, i + 1));
-                }
+                
+                logFile.WriteLine(string.Format("SunSpider,{0},{1},{2},", browser, result, i + 1));
             }
         }
 
-        public static void JetStream(string browser, RemoteWebDriver driver, int iterations)
+        public void JetStream(Browser browser, RemoteWebDriver driver, int iterations)
         {
             for (int i = 0; i < iterations; i++)
             {
                 driver.Url = "http://browserbench.org/JetStream/";
+                Thread.Sleep(2000);
                 driver.ExecuteScript("document.getElementById('status').children[0].click();");
+                Thread.Sleep(2000);
                 while (driver.FindElementById("status").Text != "Test Again")
                 {
                     Thread.Sleep(10000);
                 }
                 var result = driver.FindElementById("results-cell-geomean").Text.Substring(0, 6);
-                using (StreamWriter file = new StreamWriter(ResultsFile, true))
-                {
-                    file.WriteLine(string.Format("JetStream,{0},{1},{2},", browser, result, i + 1));
-                }
+                logFile.WriteLine(string.Format("JetStream,{0},{1},{2},", browser, result, i + 1));
             }
         }
 
-        public static void WebXPRT(string browser, RemoteWebDriver driver, int iterations)
+        public void WebXPRT(Browser browser, RemoteWebDriver driver, int iterations)
         {
             for (int i = 0; i < iterations; i++)
             {
@@ -79,14 +102,11 @@ namespace EduPerfTests
                     Thread.Sleep(10000);
                 }
                 var result = driver.FindElementByCssSelector(".resultsOval>.scoreText").Text;
-                using (StreamWriter file = new StreamWriter(ResultsFile, true))
-                {
-                    file.WriteLine(string.Format("WebXPRT,{0},{1},{2},", browser, result, i + 1));
-                }
+                logFile.WriteLine(string.Format("WebXPRT,{0},{1},{2},", browser, result, i + 1));
             }
         }
 
-        public static void OORTOnline(string browser, RemoteWebDriver driver, int iterations)
+        public void OORTOnline(Browser browser, RemoteWebDriver driver, int iterations)
         {
             var directory = Directory.CreateDirectory(@"C:\EduPerfTests\");
 

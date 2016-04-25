@@ -1,68 +1,73 @@
-﻿using System;
+﻿using OpenQA.Selenium.Remote;
+using System;
 using System.IO;
 using System.Threading;
-using OpenQA.Selenium.Remote;
-using OpenQA.Selenium;
+using static EduPerfTests.Utils;
 
 namespace EduPerfTests
 {
-    public class PageLoad
+    public class PageLoad : IDisposable
     {
-        public static string Resultsfile { get; internal set; }
+        StreamWriter logFile;
+        bool logInitialized = false;
 
-        public static void SiteLoadTime(string site, string browser, RemoteWebDriver driver, int iterations)
+        public PageLoad()
         {
-            bool retry = false;
-            for (int i = 0; i < iterations; i++)
-            {                
-                if (retry)
-                {
-                    Console.WriteLine("retrying");
-                    i--;
-                }
-                else
-                {
-                    Console.WriteLine("Recording Site Load Time For-" + site);
-                }
+            const string pageLoadResultsFileName = "pageloadresults";
+            var loadPath = Utils.TestFileLocation(pageLoadResultsFileName);
+            logFile = new StreamWriter(loadPath);            
+        }
 
-                
-                driver.Url = site;
-
-                if (retry)
-                {
-                    Thread.Sleep(15000);
-                }
-
-                Thread.Sleep(5000);
-
-                try
-                {
-                    var timing = driver.ExecuteScript("return performance.timing.loadEventEnd - performance.timing.navigationStart;");
-                    var result = Convert.ToInt64(timing);
-                    using (StreamWriter file = new StreamWriter(Resultsfile, true))
-                    {
-                        file.WriteLine(string.Format("{0},{1},{2},{3},{4}", site, browser, result, i + 1, retry));
-                    }
-
-                    retry = false;
-                }
-                catch (WebDriverException e)
-                {
-                    if (retry)
-                    {
-                        throw;
-                    }
-
-                    if (e.Message.Contains("timed out after 60 seconds"))
-                    {
-                        retry = true;
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
+        public void Dispose()
+        {
+            if (logFile != null)
+            {
+                logFile.Dispose();
+                logFile = null;
             }
         }
+
+        void initializeLog()
+        {
+            if (!logInitialized)
+            {
+                logFile.WriteLine("Site,Browser,Result (ms),Iteration");
+                logInitialized = true;
+            }
+        }
+
+        public void SiteLoadTime(string site, Browser browser, RemoteWebDriver driver, int iterations)
+        {
+            initializeLog();
+
+            for (int i = 0; i < iterations; i++)
+            {                
+                Console.WriteLine("Recording Site Load Time For-" + site);
+
+                driver.Url = site;
+
+                if (browser == Browser.InternetExplorer)
+                {
+                    Thread.Sleep(500);
+                }
+
+                long loadEventEnd;
+                while (true)
+                {
+                    // This loop is required because Microsoft Edge and Firefox both sometimes return from .Url earlier than they should
+                    var loadEventObject = driver.ExecuteScript("return performance.timing.loadEventEnd;");
+                    loadEventEnd = Convert.ToInt64(loadEventObject);
+                    if (loadEventEnd != 0) break;
+                    Console.WriteLine("Url is returning early. Please investigate!");
+                }
+
+                var navStartObject = driver.ExecuteScript("return performance.timing.navigationStart;");
+                long navStart = Convert.ToInt64(navStartObject);
+                var result = loadEventEnd - navStart;
+                logFile.WriteLine(string.Format("{0},{1},{2},{3}", site, browser, result, i + 1));
+            }
+        }
+
+
     }
 }
