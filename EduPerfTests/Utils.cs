@@ -19,21 +19,23 @@ namespace EduPerfTests
         }
 
         /// <summary>
-        /// This method takes in a fileName then looks for it int he current directory.
+        /// This method takes in a fileName then looks for it in the current directory.
         /// </summary>
         /// <param name="fileName">The file name to test</param>
         /// <returns></returns>
-        public static string TestFileLocation(string fileName)
+        public static string LogFileLocation(string fileName)
         {
             var tempFileName = fileName;
-            var currentPath = string.Format(@"{0}\", Directory.GetCurrentDirectory());
-            var newFilePath = currentPath + string.Format(@"{0}.csv", tempFileName);
+            var currentPath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\";
+            currentPath += @"perfResults\";
+            Directory.CreateDirectory(currentPath);
+            var newFilePath = currentPath + $@"{tempFileName}.csv";
 
             int count = 0;
             while (File.Exists(newFilePath))
             {
                 tempFileName = fileName + count.ToString();
-                newFilePath = currentPath + string.Format(@"{0}.csv", tempFileName);
+                newFilePath = currentPath + $@"{tempFileName}.csv";
                 count++;
             }
 

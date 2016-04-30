@@ -1,47 +1,23 @@
 ﻿using OpenQA.Selenium.Remote;
 using System;
-using System.IO;
 using System.Threading;
 using static EduPerfTests.Utils;
 
 namespace EduPerfTests
 {
-    public class PageLoad : IDisposable
+    public class PageLoad
     {
-        StreamWriter logFile;
-        bool logInitialized = false;
+        private PerformanceLog _perfLog;
 
-        public PageLoad()
+        public PageLoad(PerformanceLog perfLog)
         {
-            const string pageLoadResultsFileName = "pageloadresults";
-            var loadPath = Utils.TestFileLocation(pageLoadResultsFileName);
-            logFile = new StreamWriter(loadPath);            
-        }
-
-        public void Dispose()
-        {
-            if (logFile != null)
-            {
-                logFile.Dispose();
-                logFile = null;
-            }
-        }
-
-        void initializeLog()
-        {
-            if (!logInitialized)
-            {
-                logFile.WriteLine("Site,Browser,Result (ms),Iteration");
-                logInitialized = true;
-            }
+            _perfLog = perfLog;
         }
 
         public void SiteLoadTime(string site, Browser browser, RemoteWebDriver driver, int iterations)
         {
-            initializeLog();
-
             for (int i = 0; i < iterations; i++)
-            {                
+            {
                 Console.WriteLine("Recording Site Load Time For-" + site);
 
                 driver.Url = site;
@@ -64,10 +40,8 @@ namespace EduPerfTests
                 var navStartObject = driver.ExecuteScript("return performance.timing.navigationStart;");
                 long navStart = Convert.ToInt64(navStartObject);
                 var result = loadEventEnd - navStart;
-                logFile.WriteLine(string.Format("{0},{1},{2},{3}", site, browser, result, i + 1));
+                _perfLog.WriteToLog($"{site},{browser},{result},{i + 1}");
             }
         }
-
-
     }
 }

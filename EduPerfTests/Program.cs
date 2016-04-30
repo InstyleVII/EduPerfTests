@@ -15,26 +15,85 @@ namespace EduPerfTests
     class Program
     {
         static Browser chosenBrowsers;
-        static List<string> performanceTests = new List<string>();
+        static readonly List<string> performanceTests = new List<string>();
         static List<string> pageLoadSites = new List<string>();
         static int performanceIterations = 0;
-        static int pageLoadIterations = 0;
+        static int pageLoadIterations = 1; // always do at least one - using this number for Mem Use as well...
+        private static string pathToSites = string.Empty;
 
         static void Main(string[] args)
         {
-            DetermineBrowsers();
-            DeterminePerformanceTests();
-            DeterminePageLoadSites();
-            RunPerformance();
-            RunPageLoad();
-        }
+            bool runPerfTests = false, runPageLoadTests = false, runPageMemoryTests = false;
 
+            DetermineBrowsers();
+
+            Console.WriteLine("Run Performance Tests? y|n (default is n)");
+            string response = Console.ReadLine();
+            if (string.IsNullOrEmpty(response))
+                response = "n";
+            if (response.ToLower() == "y")
+                runPerfTests = true;
+
+            Console.WriteLine("Run Page Load Tests? y|n (default is n)");
+            response = Console.ReadLine();
+            if (string.IsNullOrEmpty(response))
+                response = "n";
+            if (response.ToLower() == "y")
+                runPageLoadTests = true;
+
+            Console.WriteLine("Run Page Memory Tests? y|n (default is n)");
+            response = Console.ReadLine();
+            if (string.IsNullOrEmpty(response))
+                response = "n";
+            if (response.ToLower() == "y")
+                runPageMemoryTests = true;
+
+            if (runPerfTests)
+            {
+                DeterminePerformanceTests();
+            }
+            if (runPageLoadTests || runPageMemoryTests)
+            {
+                DetermineSitesToLoad();
+                DeterminePageLoadIterations();
+            }
+            if (runPerfTests)
+            {
+                RunPerformance();
+            }
+            if (runPageLoadTests)
+            {
+                RunPageLoad();
+            }
+            if (runPageMemoryTests)
+            {
+                RunPageMemory();
+            }
+
+            Console.WriteLine("Done...");
+            Console.ReadLine();
+        }
+        private static void RunPageMemory()
+        {
+            if (pageLoadSites.Count > 0)
+            {
+                MemoryUsage memUse = new MemoryUsage();
+
+                foreach (Browser browser in chosenBrowsers.ChosenBrowsers())
+                {
+                    memUse.RunMemoryUsageTests(pageLoadSites, browser, pageLoadIterations);
+                }
+            }
+        }
         private static void RunPageLoad()
         {
             if (pageLoadSites.Count > 0)
             {
-                using (PageLoad pageLoader = new PageLoad())
+                using (var perfLog = new PerformanceLog("pageloadtestresults"))
                 {
+                    perfLog.InitializeLog("Site,Browser,Result (ms),Iteration");
+                    PageLoad pageLoader = new PageLoad(perfLog);
+
                     foreach (Browser browser in chosenBrowsers.ChosenBrowsers())
                     {
                         using (var driver = LaunchDriver(browser))
@@ -45,6 +104,7 @@ namespace EduPerfTests
                             }
                         }
                     }
+
                 }
             }
         }
@@ -53,18 +113,28 @@ namespace EduPerfTests
         {
             if (performanceTests.Count > 0)
             {
-                using (Performance performanceTester = new Performance())
+                using (var perfLog = new PerformanceLog("performancetestresults"))
                 {
+                    perfLog.InitializeLog("Benchmark,Browser,Result,Iteration");
+
+                    Performance performanceTester = new Performance(perfLog);
+
                     foreach (Browser browser in chosenBrowsers.ChosenBrowsers())
                     {
                         using (var driver = LaunchDriver(browser))
                         {
-                            if (performanceTests.Contains("Octane")) performanceTester.Octane(browser, driver, performanceIterations);
-                            if (performanceTests.Contains("SunSpider")) performanceTester.SunSpider(browser, driver, performanceIterations);
-                            if (performanceTests.Contains("JetStream")) performanceTester.JetStream(browser, driver, performanceIterations);
-                            if (performanceTests.Contains("WebXPRT")) performanceTester.WebXPRT(browser, driver, performanceIterations);
-                            if (performanceTests.Contains("OORTOnline")) performanceTester.OORTOnline(browser, driver, performanceIterations);
+                            if (performanceTests.Contains("Octane"))
+                                performanceTester.Octane(browser, driver, performanceIterations);
+                            if (performanceTests.Contains("SunSpider"))
+                                performanceTester.SunSpider(browser, driver, performanceIterations);
+                            if (performanceTests.Contains("JetStream"))
+                                performanceTester.JetStream(browser, driver, performanceIterations);
+                            if (performanceTests.Contains("WebXPRT"))
+                                performanceTester.WebXPRT(browser, driver, performanceIterations);
+                            if (performanceTests.Contains("OORTOnline"))
+                                performanceTester.OORTOnline(browser, driver, performanceIterations);
                         }
+
                     }
                 }
             }
@@ -95,7 +165,8 @@ namespace EduPerfTests
 
             if (chosenBrowsers == 0)
             {
-                Console.WriteLine("Unable to determine what browser you meant by '{0}'. Please try again.", selectedBrowsers);
+                Console.WriteLine(
+                    $"Unable to determine what browser you meant by '{selectedBrowsers}'. Please try again.");
                 DetermineBrowsers();
                 return;
             }
@@ -142,7 +213,8 @@ namespace EduPerfTests
 
             if (performanceTests.Count == 0)
             {
-                Console.WriteLine("Unable to determine what performance test you meant by '{0}'. Please try again.", selectedTests);
+                Console.WriteLine(
+                    $"Unable to determine what performance test you meant by '{selectedTests}'. Please try again.");
                 DeterminePerformanceTests();
                 return;
             }
@@ -158,13 +230,17 @@ namespace EduPerfTests
             if (performanceIterations == 0) DeterminePerformanceIterations();
         }
 
-        static void DeterminePageLoadSites()
+        static void DetermineSitesToLoad()
         {
-            Console.WriteLine("Specify the path to the csv file containing the sites you would like to test (blank to skip):");
-            var path = Console.ReadLine();
+            Console.WriteLine("Specify the path to the csv file containing the sites you would like to test (blank to skip, d for default):");
+            pathToSites = Console.ReadLine();
 
-            if (string.IsNullOrWhiteSpace(path)) return;
-            using (var reader = new StreamReader(path))
+            if (string.IsNullOrWhiteSpace(pathToSites)) return;
+
+            if (pathToSites.ToLower() == "d")
+                pathToSites = @"c:\users\johnjan\desktop\sitelist.csv";
+
+            using (var reader = new StreamReader(pathToSites))
             {
                 var input = reader.ReadToEnd();            
                 pageLoadSites = input.Split(',').ToList();
@@ -179,17 +255,15 @@ namespace EduPerfTests
             }
 
             DeterminePageLoadSiteStart();
-            DeterminePageLoadIterations();
         }
-
+        
         private static void DeterminePageLoadSiteStart()
         {
-            int startingSite;
             Console.WriteLine("Specify the site number to start with. The first item is 1. (blank to run all sites):");
             var input = Console.ReadLine();
             if (string.IsNullOrWhiteSpace(input)) return;
 
-            startingSite = int.Parse(input);
+            int startingSite = int.Parse(input);
 
             pageLoadSites.RemoveRange(0, startingSite - 1);
         }
@@ -199,12 +273,12 @@ namespace EduPerfTests
             Console.WriteLine("Specify the number of iterations you would like to run:");
             int.TryParse(Console.ReadLine(), out pageLoadIterations);
 
-            if (pageLoadIterations == 0) DeterminePageLoadIterations();
+            if (pageLoadIterations < 1) DeterminePageLoadIterations();
         }
 
-        static RemoteWebDriver LaunchDriver(Browser browser)
+        public static RemoteWebDriver LaunchDriver(Browser browser)
         {
-            Console.WriteLine("Starting browser: {0}", browser);
+            Console.WriteLine($"Starting browser: {browser}");
             try
             {
                 RemoteWebDriver driver;
@@ -229,20 +303,20 @@ namespace EduPerfTests
                         Thread.Sleep(2000);
                         break;
                     default:
-                        throw new Exception(string.Format("Unexpected browser: {0}", browser));
+                        throw new Exception($"Unexpected browser: {browser}");
                 }
 
-                driver.Manage().Window.Maximize();
+                //driver.Manage().Window.Maximize();
 
                 // It appears visually that some browsers may not complete all work before returning from maximize. Sleeping for paranois.
                 // We should test the navigate times with and without sleep to know for certain.
-                Thread.Sleep(1000);
+                Thread.Sleep(5000);
 
                 return driver;
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Failed to launch {0}, ERROR: {1}", browser, ex.Message);
+                Console.WriteLine($"Failed to launch {browser}, ERROR: {ex.Message}");
                 throw;
             }
         }
