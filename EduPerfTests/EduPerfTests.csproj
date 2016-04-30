@@ -49,7 +49,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BrowserMemory.cs" />
-    <Compile Include="MemoryData.cs" />
     <Compile Include="MemoryUsage.cs" />
     <Compile Include="PageLoad.cs" />
     <Compile Include="Performance.cs" />

@@ -26,14 +26,13 @@ namespace EduPerfTests
             {
                 foreach (var site in pageLoadSites)
                 {
-                    var store = new List<MemoryData>();
                     string processName = ProcessNameFromBrowser();
+                    long startSet = 0, afterSet = 0;
 
                     // we want to iterate 5 times and get the average for each perf value
                     for (var i = 0; i < iterations; i++)
                     {
                         BrowserMemory b, b2;
-                        var memData = new MemoryData();
 
                         // launch the browser
                         using (var driver = LaunchDriver(_browser))
@@ -60,26 +59,13 @@ namespace EduPerfTests
                         }
 
                         // do work with the memory snapshots
-                        var startSet = b.CurrentPrivateWorkingSet / 1024;
-                        var afterSet = b2.CurrentPrivateWorkingSet / 1024;
-                        var deltaSet = afterSet - startSet;
-                        memData.Iteration = i;
-                        memData.StartMemory = startSet; // default is KB
-                        memData.EndMemory = afterSet;
-                        store.Add(memData);
-                    }
-
-                    // have 5 iterations in memData to get average
-                    long startTimes = 0, endTimes = 0;
-                    foreach (var item in store)
-                    {
-                        startTimes += item.StartMemory;
-                        endTimes += item.EndMemory;
+                        startSet += b.CurrentPrivateWorkingSet / 1024;
+                        afterSet += b2.CurrentPrivateWorkingSet / 1024;
                     }
 
                     long startAverage = 0, endAverage = 0;
-                    startAverage = startTimes / iterations;
-                    endAverage = endTimes / iterations;
+                    startAverage = startSet / iterations;
+                    endAverage = afterSet / iterations;
                     long delta = endAverage - startAverage;
 
                     _perfLog.WriteToLog(
@@ -89,7 +75,6 @@ namespace EduPerfTests
                         delta.ToString());
                 }
             }
-
         }
 
         private string ProcessNameFromBrowser()
@@ -122,6 +107,7 @@ namespace EduPerfTests
         }
         private static void ClearCookiesAndCache(RemoteWebDriver driver)
         {
+            Thread.Sleep(1000);
             try
             {
                 driver.Manage().Cookies.DeleteAllCookies();
