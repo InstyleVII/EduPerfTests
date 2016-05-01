@@ -112,9 +112,9 @@ namespace EduPerfTests
             {
                 driver.Manage().Cookies.DeleteAllCookies();
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                // TODO
+                Console.WriteLine("Clearing Cookies failed due to " + e.ToString());
             }
 
             Process p = new Process();

@@ -238,7 +238,7 @@ namespace EduPerfTests
             if (string.IsNullOrWhiteSpace(pathToSites)) return;
 
             if (pathToSites.ToLower() == "d")
-                pathToSites = @"c:\users\johnjan\desktop\sitelist.csv";
+                pathToSites = Directory.GetCurrentDirectory().ToString() + @"\sitelist.csv";
 
             using (var reader = new StreamReader(pathToSites))
             {
@@ -247,7 +247,7 @@ namespace EduPerfTests
             }
 
             // Starting count at 1 so it correlates with user chosen site start count
-            int count = 1;
+            var count = 1;
             foreach(var site in pageLoadSites)
             {
                 Console.WriteLine(count.ToString() + "-" + site);
@@ -263,7 +263,7 @@ namespace EduPerfTests
             var input = Console.ReadLine();
             if (string.IsNullOrWhiteSpace(input)) return;
 
-            int startingSite = int.Parse(input);
+            var startingSite = int.Parse(input);
 
             pageLoadSites.RemoveRange(0, startingSite - 1);
         }
@@ -306,11 +306,11 @@ namespace EduPerfTests
                         throw new Exception($"Unexpected browser: {browser}");
                 }
 
-                //driver.Manage().Window.Maximize();
+                driver.Manage().Window.Maximize();
 
                 // It appears visually that some browsers may not complete all work before returning from maximize. Sleeping for paranois.
                 // We should test the navigate times with and without sleep to know for certain.
-                Thread.Sleep(5000);
+                Thread.Sleep(1000);
 
                 return driver;
             }
