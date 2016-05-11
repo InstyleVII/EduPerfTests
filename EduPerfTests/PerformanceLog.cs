@@ -7,15 +7,24 @@ namespace EduPerfTests
     {
         StreamWriter logFile;
         bool logInitialized = false;
+        bool wroteFirstResult = false;
 
         public PerformanceLog(string logFileName)
         {
             var loadPath = Utils.LogFileLocation(logFileName);
+            Console.WriteLine("Storing results to {0}", loadPath);
             logFile = new StreamWriter(loadPath);
+            logFile.AutoFlush = true;
         }
 
         public void WriteToLog(string logLine)
         {
+            if (!wroteFirstResult)
+            {
+                wroteFirstResult = true;
+                Console.WriteLine("Writing first result to log");
+            }
+
             logFile.WriteLine(logLine);
         }
 
@@ -23,6 +32,7 @@ namespace EduPerfTests
         {
             if (logFile != null)
             {
+                Console.WriteLine("Disposing log");
                 logFile.Dispose();
                 logFile = null;
             }
@@ -32,6 +42,7 @@ namespace EduPerfTests
         {
             if (!logInitialized)
             {
+                Console.WriteLine("Initializing log");
                 logFile.WriteLine(firstLine);
                 logInitialized = true;
             }

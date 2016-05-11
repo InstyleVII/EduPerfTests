@@ -70,7 +70,7 @@ namespace EduPerfTests
                 RunPageMemory();
             }
 
-            Console.WriteLine("Done...");
+            Console.WriteLine("Done... Press Enter to exit.");
             Console.ReadLine();
         }
         private static void RunPageMemory()
