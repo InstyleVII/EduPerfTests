@@ -27,7 +27,7 @@ namespace EduPerfTests
                     Thread.Sleep(10000);
                 }
                 var result = driver.FindElementById("main-banner").Text.Substring(14);
-                _perfLog.WriteToLog($"Octane,{browser},{result},{i + 1},");
+                _perfLog.WriteToLog($"Octane,{browser},{result},{i + 1}");
             }
         }
 
@@ -47,7 +47,7 @@ namespace EduPerfTests
                     result = driver.FindElementById("console").Text.Substring(165, 5);
                 }
 
-                _perfLog.WriteToLog($"SunSpider,{browser},{result},{i + 1},");
+                _perfLog.WriteToLog($"SunSpider,{browser},{result},{i + 1}");
             }
         }
 
@@ -64,7 +64,7 @@ namespace EduPerfTests
                     Thread.Sleep(10000);
                 }
                 var result = driver.FindElementById("results-cell-geomean").Text.Substring(0, 6);
-                _perfLog.WriteToLog($"JetStream,{browser},{result},{i + 1},");
+                _perfLog.WriteToLog($"JetStream,{browser},{result},{i + 1}");
             }
         }
 
@@ -80,7 +80,7 @@ namespace EduPerfTests
                     Thread.Sleep(10000);
                 }
                 var result = driver.FindElementByCssSelector(".resultsOval>.scoreText").Text;
-                _perfLog.WriteToLog($"WebXPRT,{browser},{result},{i + 1},");
+                _perfLog.WriteToLog($"WebXPRT,{browser},{result},{i + 1}");
             }
         }
 
