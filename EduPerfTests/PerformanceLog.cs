@@ -14,6 +14,7 @@ namespace EduPerfTests
             var loadPath = Utils.LogFileLocation(logFileName);
             Console.WriteLine("Storing results to {0}", loadPath);
             logFile = new StreamWriter(loadPath);
+            logFile.AutoFlush = true;
         }
 
         public void WriteToLog(string logLine)
