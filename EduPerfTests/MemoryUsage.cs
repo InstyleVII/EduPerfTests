@@ -32,7 +32,7 @@ namespace EduPerfTests
                     // we want to iterate 5 times and get the average for each perf value
                     for (var i = 0; i < iterations; i++)
                     {
-                        BrowserMemory b, b2;
+                        long privateWorkingSetBefore = 0, privateWorkingSetAfter = 0;
 
                         // launch the browser
                         using (var driver = LaunchDriver(_browser))
@@ -46,21 +46,21 @@ namespace EduPerfTests
                             }
 
                             // take a snapshot
-                            b = new BrowserMemory(processName);
+                            privateWorkingSetBefore = new BrowserMemory(processName).CurrentPrivateWorkingSet;
 
                             // wait 10 seconds
                             Thread.Sleep(10000);
 
                             // take a snapshot
-                            b2 = new BrowserMemory(processName);
+                            privateWorkingSetAfter = new BrowserMemory(processName).CurrentPrivateWorkingSet;
 
                             // clear cache and cookies
                             ClearCookiesAndCache(driver);
                         }
 
                         // do work with the memory snapshots
-                        startSet += b.CurrentPrivateWorkingSet / 1024;
-                        afterSet += b2.CurrentPrivateWorkingSet / 1024;
+                        startSet += privateWorkingSetBefore / 1024;
+                        afterSet += privateWorkingSetAfter / 1024;
                     }
 
                     long startAverage = 0, endAverage = 0;
