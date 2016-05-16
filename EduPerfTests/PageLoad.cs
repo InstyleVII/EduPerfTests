@@ -8,19 +8,23 @@ namespace EduPerfTests
     public class PageLoad
     {
         private PerformanceLog _perfLog;
+        private string _scheme;
 
-        public PageLoad(PerformanceLog perfLog)
+        public PageLoad(PerformanceLog perfLog, string scheme)
         {
             _perfLog = perfLog;
+            _scheme = scheme;
         }
 
         public void SiteLoadTime(string site, Browser browser, RemoteWebDriver driver, int iterations)
         {
+            string fullUrl = $"{_scheme}://{site}";
             for (int i = 0; i < iterations; i++)
             {
-                Console.WriteLine("Recording Site Load Time For-" + site);
+                Console.WriteLine($"Recording Site Load Time For '{fullUrl}'");
 
-                driver.Url = site;
+                // driver.Url = site seems to fail in Chrome 50 and later. If scheme is added, navigations work.
+                driver.Navigate().GoToUrl(fullUrl);
 
                 if (browser == Browser.InternetExplorer)
                 {

@@ -14,12 +14,13 @@ namespace EduPerfTests
 {
     class Program
     {
-        static Browser chosenBrowsers;
-        static readonly List<string> performanceTests = new List<string>();
-        static List<string> pageLoadSites = new List<string>();
-        static int performanceIterations = 0;
-        static int pageLoadIterations = 1; // always do at least one - using this number for Mem Use as well...
+        private static Browser chosenBrowsers;
+        private static readonly List<string> performanceTests = new List<string>();
+        private static List<string> pageLoadSites = new List<string>();
+        private static int performanceIterations = 0;
+        private static int pageLoadIterations = 1; // always do at least one - using this number for Mem Use as well...
         private static string pathToSites = string.Empty;
+        private static string pageLoadScheme = string.Empty;
 
         static void Main(string[] args)
         {
@@ -55,6 +56,7 @@ namespace EduPerfTests
             if (runPageLoadTests || runPageMemoryTests)
             {
                 DetermineSitesToLoad();
+                DetermineScheme();
                 DeterminePageLoadIterations();
             }
             if (runPerfTests)
@@ -92,7 +94,7 @@ namespace EduPerfTests
                 using (var perfLog = new PerformanceLog("pageloadtestresults"))
                 {
                     perfLog.InitializeLog("Site,Browser,Result (ms),Iteration");
-                    PageLoad pageLoader = new PageLoad(perfLog);
+                    PageLoad pageLoader = new PageLoad(perfLog, pageLoadScheme);
 
                     foreach (var site in pageLoadSites)
                     {
@@ -265,6 +267,17 @@ namespace EduPerfTests
             var startingSite = int.Parse(input);
 
             pageLoadSites.RemoveRange(0, startingSite - 1);
+        }
+
+        static void DetermineScheme()
+        {
+            Console.WriteLine("Specify the scheme to use to load the sites (blank for https, invalid scheme will use https):");
+            pageLoadScheme = Console.ReadLine();
+
+            if (!Uri.CheckSchemeName(pageLoadScheme))
+            {
+                pageLoadScheme = Uri.UriSchemeHttps;
+            }
         }
 
         static void DeterminePageLoadIterations()
