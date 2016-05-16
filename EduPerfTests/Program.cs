@@ -1,13 +1,7 @@
-﻿using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Edge;
-using OpenQA.Selenium.Firefox;
-using OpenQA.Selenium.IE;
-using OpenQA.Selenium.Remote;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using static EduPerfTests.Utils;
 
 namespace EduPerfTests
@@ -91,24 +85,10 @@ namespace EduPerfTests
         {
             if (pageLoadSites.Count > 0)
             {
-                using (var perfLog = new PerformanceLog("pageloadtestresults"))
-                {
-                    perfLog.InitializeLog("Site,Browser,Result (ms),Iteration");
-                    PageLoad pageLoader = new PageLoad(perfLog, pageLoadScheme);
-
-                    foreach (var site in pageLoadSites)
-                    {
-                        foreach (Browser browser in chosenBrowsers.ChosenBrowsers())
-                        {
-                            using (var driver = LaunchDriver(browser))
-                            {
-                                pageLoader.SiteLoadTime(site, browser, driver, pageLoadIterations);
-                            }
-                        }
-                    }
-                }
+                PageLoad pageLoader = new PageLoad(pageLoadScheme);
+                pageLoader.LoadPages(pageLoadSites, chosenBrowsers, pageLoadIterations);
             }
-        }
+        }        
 
         private static void RunPerformance()
         {
@@ -286,51 +266,6 @@ namespace EduPerfTests
             int.TryParse(Console.ReadLine(), out pageLoadIterations);
 
             if (pageLoadIterations < 1) DeterminePageLoadIterations();
-        }
-
-        public static RemoteWebDriver LaunchDriver(Browser browser)
-        {
-            Console.WriteLine($"Starting browser: {browser}");
-            try
-            {
-                RemoteWebDriver driver;
-
-                switch (browser)
-                {
-                    case Browser.Firefox:
-                        driver = new FirefoxDriver();                      
-                        break;
-                    case Browser.Chrome:
-                        driver = new ChromeDriver();
-                        break;
-                    case Browser.InternetExplorer:
-                        driver = new InternetExplorerDriver();
-                        break;
-                    case Browser.MicrosoftEdge:
-                        driver = new EdgeDriver();
-                        
-                        // This sleep allows Microsoft Edge Anniversary Update to workaround a bug where it doesn't properly wait for about:blank   
-                        // This bug COULD occur in Fall Update 2016 but would be much rarer.
-                        // It should be fixed ~May 15th in Anniversary Update. 5129594                  
-                        Thread.Sleep(2000);
-                        break;
-                    default:
-                        throw new Exception($"Unexpected browser: {browser}");
-                }
-
-                driver.Manage().Window.Maximize();
-
-                // It appears visually that some browsers may not complete all work before returning from maximize. Sleeping for paranois.
-                // We should test the navigate times with and without sleep to know for certain.
-                Thread.Sleep(1000);
-
-                return driver;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to launch {browser}, ERROR: {ex.Message}");
-                throw;
-            }
         }
     }
 }
