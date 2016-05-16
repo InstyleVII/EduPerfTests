@@ -94,17 +94,16 @@ namespace EduPerfTests
                     perfLog.InitializeLog("Site,Browser,Result (ms),Iteration");
                     PageLoad pageLoader = new PageLoad(perfLog);
 
-                    foreach (Browser browser in chosenBrowsers.ChosenBrowsers())
+                    foreach (var site in pageLoadSites)
                     {
-                        using (var driver = LaunchDriver(browser))
+                        foreach (Browser browser in chosenBrowsers.ChosenBrowsers())
                         {
-                            foreach (var site in pageLoadSites)
+                            using (var driver = LaunchDriver(browser))
                             {
                                 pageLoader.SiteLoadTime(site, browser, driver, pageLoadIterations);
                             }
                         }
                     }
-
                 }
             }
         }
