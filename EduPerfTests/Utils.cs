@@ -5,6 +5,7 @@ using OpenQA.Selenium.IE;
 using OpenQA.Selenium.Remote;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -68,6 +69,8 @@ namespace EduPerfTests
 
         public static RemoteWebDriver LaunchDriver(Browser browser)
         {
+            AuditDriver();
+
             Console.WriteLine($"Starting browser: {browser}");
             try
             {
@@ -102,6 +105,20 @@ namespace EduPerfTests
             {
                 Console.WriteLine($"Failed to launch {browser}, ERROR: {ex.Message}");
                 throw;
+            }
+        }
+
+        public static void AuditDriver()
+        {
+            foreach (var process in Process.GetProcesses())
+            {
+                if (process.ProcessName.Contains("chrome") 
+                    || process.ProcessName.Contains("microsoftedge") 
+                    || process.ProcessName.Contains("microsoftwebdriver"))
+                {
+                    Console.WriteLine($"Found unexpected process, '{process.ProcessName}', when all browsers should be closed. Killing it.");
+                    process.Kill();
+                }
             }
         }
 
