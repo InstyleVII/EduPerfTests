@@ -96,12 +96,6 @@ namespace EduPerfTests
                         throw new Exception($"Unexpected browser: {browser}");
                 }
 
-                driver.Manage().Window.Maximize();
-
-                // It appears visually that some browsers may not complete all work before returning from maximize. Sleeping for paranois.
-                // We should test the navigate times with and without sleep to know for certain.
-                Thread.Sleep(1000);
-
                 return driver;
             }
             catch (Exception ex)
@@ -109,6 +103,15 @@ namespace EduPerfTests
                 Console.WriteLine($"Failed to launch {browser}, ERROR: {ex.Message}");
                 throw;
             }
+        }
+
+        public static void InitializeDriver(RemoteWebDriver driver)
+        { 
+                driver.Manage().Window.Maximize();
+
+                // It appears visually that some browsers may not complete all work before returning from maximize. Sleeping for paranois.
+                // We should test the navigate times with and without sleep to know for certain.
+                Thread.Sleep(1000);
         }
     }
 }
