@@ -110,15 +110,22 @@ namespace EduPerfTests
 
         private static void AuditDriver()
         {
-            foreach (var process in Process.GetProcesses())
+            try
             {
-                if (process.ProcessName.IndexOf("chrome", StringComparison.OrdinalIgnoreCase) > -1
-                    || process.ProcessName.IndexOf("microsoftedge", StringComparison.OrdinalIgnoreCase) > -1
-                    || process.ProcessName.IndexOf("microsoftwebdriver", StringComparison.OrdinalIgnoreCase) > -1)
+                foreach (var process in Process.GetProcesses())
                 {
-                    Console.WriteLine($"Found unexpected process, '{process.ProcessName}', when all browsers should be closed. Killing it.");
-                    process.Kill();
+                    if (process.ProcessName.IndexOf("chrome", StringComparison.OrdinalIgnoreCase) > -1
+                    || process.ProcessName.IndexOf("microsoftwebdriver", StringComparison.OrdinalIgnoreCase) > -1)
+                    //|| process.ProcessName.IndexOf("microsoftedge", StringComparison.OrdinalIgnoreCase) > -1
+                    {
+                        Console.WriteLine($"Found unexpected process, '{process.ProcessName}', when all browsers should be closed. Killing it.");
+                        process.Kill();
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Hit an exception in AuditDriver: {e}");
             }
         }
 
