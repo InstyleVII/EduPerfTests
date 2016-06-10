@@ -108,13 +108,13 @@ namespace EduPerfTests
             }
         }
 
-        public static void AuditDriver()
+        private static void AuditDriver()
         {
             foreach (var process in Process.GetProcesses())
             {
-                if (process.ProcessName.Contains("chrome") 
-                    || process.ProcessName.Contains("microsoftedge") 
-                    || process.ProcessName.Contains("microsoftwebdriver"))
+                if (process.ProcessName.IndexOf("chrome", StringComparison.OrdinalIgnoreCase) > -1
+                    || process.ProcessName.IndexOf("microsoftedge", StringComparison.OrdinalIgnoreCase) > -1
+                    || process.ProcessName.IndexOf("microsoftwebdriver", StringComparison.OrdinalIgnoreCase) > -1)
                 {
                     Console.WriteLine($"Found unexpected process, '{process.ProcessName}', when all browsers should be closed. Killing it.");
                     process.Kill();
