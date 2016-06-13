@@ -102,20 +102,28 @@ namespace EduPerfTests
 
                     foreach (Browser browser in chosenBrowsers.ChosenBrowsers())
                     {
-                        using (var driver = LaunchDriver(browser))
-                        {
-                            if (performanceTests.Contains("Octane"))
-                                performanceTester.Octane(browser, driver, performanceIterations);
-                            if (performanceTests.Contains("SunSpider"))
-                                performanceTester.SunSpider(browser, driver, performanceIterations);
-                            if (performanceTests.Contains("JetStream"))
-                                performanceTester.JetStream(browser, driver, performanceIterations);
-                            if (performanceTests.Contains("WebXPRT"))
-                                performanceTester.WebXPRT(browser, driver, performanceIterations);
-                            if (performanceTests.Contains("OORTOnline"))
-                                performanceTester.OORTOnline(browser, driver, performanceIterations);
-                        }
+                        try
+                        { 
+                            using (var driver = LaunchDriver(browser))
+                            {
+                                InitializeDriver(driver);
 
+                                if (performanceTests.Contains("Octane"))
+                                    performanceTester.Octane(browser, driver, performanceIterations);
+                                if (performanceTests.Contains("SunSpider"))
+                                    performanceTester.SunSpider(browser, driver, performanceIterations);
+                                if (performanceTests.Contains("JetStream"))
+                                    performanceTester.JetStream(browser, driver, performanceIterations);
+                                if (performanceTests.Contains("WebXPRT"))
+                                    performanceTester.WebXPRT(browser, driver, performanceIterations);
+                                if (performanceTests.Contains("OORTOnline"))
+                                    performanceTester.OORTOnline(browser, driver, performanceIterations);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine($"Unexpected exception from running browser: {e}");
+                        }
                     }
                 }
             }

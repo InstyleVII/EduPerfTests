@@ -5,6 +5,7 @@ using OpenQA.Selenium.IE;
 using OpenQA.Selenium.Remote;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -68,6 +69,8 @@ namespace EduPerfTests
 
         public static RemoteWebDriver LaunchDriver(Browser browser)
         {
+            AuditDriver();
+
             Console.WriteLine($"Starting browser: {browser}");
             try
             {
@@ -96,12 +99,6 @@ namespace EduPerfTests
                         throw new Exception($"Unexpected browser: {browser}");
                 }
 
-                driver.Manage().Window.Maximize();
-
-                // It appears visually that some browsers may not complete all work before returning from maximize. Sleeping for paranois.
-                // We should test the navigate times with and without sleep to know for certain.
-                Thread.Sleep(1000);
-
                 return driver;
             }
             catch (Exception ex)
@@ -109,6 +106,36 @@ namespace EduPerfTests
                 Console.WriteLine($"Failed to launch {browser}, ERROR: {ex.Message}");
                 throw;
             }
+        }
+
+        private static void AuditDriver()
+        {
+            try
+            {
+                foreach (var process in Process.GetProcesses())
+                {
+                    if (process.ProcessName.IndexOf("chrome", StringComparison.OrdinalIgnoreCase) > -1
+                    || process.ProcessName.IndexOf("microsoftwebdriver", StringComparison.OrdinalIgnoreCase) > -1)
+                    //|| process.ProcessName.IndexOf("microsoftedge", StringComparison.OrdinalIgnoreCase) > -1
+                    {
+                        Console.WriteLine($"Found unexpected process, '{process.ProcessName}', when all browsers should be closed. Killing it.");
+                        process.Kill();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Hit an exception in AuditDriver: {e}");
+            }
+        }
+
+        public static void InitializeDriver(RemoteWebDriver driver)
+        { 
+                driver.Manage().Window.Maximize();
+
+                // It appears visually that some browsers may not complete all work before returning from maximize. Sleeping for paranois.
+                // We should test the navigate times with and without sleep to know for certain.
+                Thread.Sleep(1000);
         }
     }
 }

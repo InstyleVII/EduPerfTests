@@ -37,6 +37,8 @@ namespace EduPerfTests
                         // launch the browser
                         using (var driver = LaunchDriver(_browser))
                         {
+                            InitializeDriver(driver);
+
                             // browse to the page
                             driver.Url = site;
 
